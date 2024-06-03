@@ -58,7 +58,18 @@ async function run() {
     })
 
     //get user info
-    app.get('/user/:email', async(req,res)=>{
+    app.get('/teacher/:email', async(req,res)=>{
+        const email = req.params.email
+        // console.log(email)
+        const query = {email:email}
+        const result = await teacherCollection.findOne(query);
+        // console.log(result)
+        // console.log(result)
+        res.send(result)
+    })
+
+     //get teacher info
+     app.get('/user/:email', async(req,res)=>{
         const email = req.params.email
         // console.log(email)
         const query = {email:email}
