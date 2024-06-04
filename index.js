@@ -186,6 +186,62 @@ async function run() {
        res.send(result);
     })
 
+    //api to load all the courses
+    app.get('/allCourse', async(req,res)=>{
+       const result = await courseCollection.find().toArray();
+       res.send(result);
+    })
+    
+
+    //api to get specific user all courses
+    app.get('/teachersAllCourse/:email', async(req,res)=>{
+      const email = req.params.email;
+      // console.log(email)
+      const query = {email:email}
+      const result = await courseCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //approve a teacher course
+    app.patch('/approveCourse/:id', async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set:{
+            isApproved:'yes'
+        }
+      }
+      const result = await courseCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+    //reject a teacher course
+    app.patch('/rejectCourse/:id', async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set:{
+            isApproved:'reject'
+        }
+      }
+      const result = await courseCollection.updateOne(filter, updateDoc);
+      res.send(result)
+
+    })
+
+    //request a review for the course request
+    app.patch('/reviewRequest/:id', async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set:{
+            isApproved:'no'
+        }
+      }
+      const result = await courseCollection.updateOne(filter, updateDoc);
+      res.send(result)
+
+    })
 
 
 
