@@ -35,7 +35,7 @@ async function run() {
     //sending the user data to the server
     app.post('/user', async(req,res)=>{
         const user = req.body;
-        console.log('user data',user);
+        // console.log('user data',user);
         //look if the data is availbe on server or not
         const query = {email:user.email}
         const isExist = await userCollection.findOne(query);
@@ -68,7 +68,7 @@ async function run() {
         res.send(result)
     })
 
-     //get teacher info
+     //get specific teacher info
      app.get('/user/:email', async(req,res)=>{
         const email = req.params.email
         // console.log(email)
@@ -76,6 +76,85 @@ async function run() {
         const result = await userCollection.findOne(query);
         // console.log(result)
         res.send(result)
+    })
+
+    //get all teacher info
+    app.get('/allteachers', async(req,res)=>{
+      const result = await teacherCollection.find().toArray();
+      res.send(result);
+    })
+
+    //update the course request
+    app.patch('/teacher/:id', async(req,res)=>{
+       const id = req.params.id;
+       const filter = {_id: new ObjectId(id)}
+       const updateDoc = {
+         $set:{
+            isApproved:'yes'
+         }
+       }
+
+       const result = await teacherCollection.updateOne(filter, updateDoc);
+       res.send(result);
+    })
+
+    //making the user to teacher
+    app.patch('/user/:email', async(req,res)=>{
+      const email = req.params.email;
+      const filter = {email:email}
+      const updateDoc = {
+        $set:{
+          role:'teacher'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+    //rejecting the course request
+    app.patch('/teacher/reject/:id', async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set:{
+          isApproved:'reject'
+        }
+      }
+      const result = await teacherCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+    //request the another review of the course
+    app.patch('/teacher/review/:email', async(req,res)=>{
+      const email = req.params.email;
+      const filter = {email:email};
+      const updateDoc = {
+        $set:{
+          isApproved:'no'
+        }
+      }
+      const result = await teacherCollection.updateOne(filter,updateDoc);
+      res.send(result);
+    })
+
+    //all users info
+    app.get('/allUser', async(req,res)=>{
+        const result = await userCollection.find().toArray();
+        res.send(result);
+    })
+
+    //make a user admin
+    app.patch('/promote/:id', async(req,res)=>{
+      const id = req.params.id;
+      // console.log(id)
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set:{
+          role:'admin'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
     })
 
 
