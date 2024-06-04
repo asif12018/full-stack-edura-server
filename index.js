@@ -31,7 +31,8 @@ async function run() {
 
     //the data collection
     const userCollection = client.db('eduraDB').collection('user');
-    const teacherCollection = client.db('eduraDB').collection('teacher')
+    const teacherCollection = client.db('eduraDB').collection('teacher');
+    const courseCollection = client.db('eduraDB').collection('course');
     //sending the user data to the server
     app.post('/user', async(req,res)=>{
         const user = req.body;
@@ -138,10 +139,25 @@ async function run() {
     })
 
     //all users info
-    app.get('/allUser', async(req,res)=>{
-        const result = await userCollection.find().toArray();
-        res.send(result);
-    })
+    app.get('/allUser', async (req, res) => {
+      const query = req.query.keyword;
+      console.log(query);
+      let filter = {};
+  
+      if (query && query.length > 0) {
+          // Using regex for partial matches (case insensitive)
+          filter = { email: { $regex: query, $options: 'i' } };
+      }
+  
+      try {
+          const result = await userCollection.find(filter).toArray();
+          res.send(result);
+      } catch (error) {
+          console.error('Error fetching users:', error);
+          res.status(500).send('Error fetching users');
+      }
+  });
+  
 
     //make a user admin
     app.patch('/promote/:id', async(req,res)=>{
@@ -155,6 +171,19 @@ async function run() {
       }
       const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
+    })
+
+    //api to react auto search to complete
+    app.get('/search', async(req,res)=>{
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
+
+    //api to add course to the database
+    app.post('/addCourse', async(req,res)=>{
+       const course = req.body;
+       const result = await courseCollection.insertOne(course);
+       res.send(result);
     })
 
 
