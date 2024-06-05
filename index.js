@@ -243,6 +243,13 @@ async function run() {
 
     })
 
+    //api to load all available course
+    app.get('/allAvailableCourse', async(req,res)=>{
+      const query = {isApproved:'yes'}
+      const result = await courseCollection.find(query).toArray();
+      res.send(result);
+    })
+
 
 
     // Send a ping to confirm a successful connection
