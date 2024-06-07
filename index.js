@@ -141,7 +141,7 @@ async function run() {
     //all users info
     app.get('/allUser', async (req, res) => {
       const query = req.query.keyword;
-      console.log(query);
+      // console.log(query);
       let filter = {};
   
       if (query && query.length > 0) {
@@ -229,6 +229,14 @@ async function run() {
 
     })
 
+    //api to get teachers specific course
+    app.get('/progress/:id', async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await courseCollection.findOne(query);
+      res.send(result);
+    })
+
     //request a review for the course request
     app.patch('/reviewRequest/:id', async(req,res)=>{
       const id = req.params.id;
@@ -258,6 +266,40 @@ async function run() {
       const result = await courseCollection.findOne(query);
       res.send(result);
     })
+
+    //api to update course
+    app.patch('/update/:id', async(req,res)=>{
+      const id = req.params.id;
+      const data = req.body;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set:{
+          category:data.category,
+          coursePhoto:data.coursePhoto,
+          description:data.description,
+          price:data.price,
+          title:data.title
+        }
+      }
+
+      const result = await courseCollection.updateOne(filter,updateDoc);
+      res.send(result);
+    })
+
+    //api to delete a specific
+    app.delete('/deleteCourse/:id', async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = { _id: new ObjectId(id) }; // Ensure ObjectId is imported from 'mongodb'
+      try {
+        const result = await courseCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'An error occurred while deleting the course' });
+      }
+    });
+    
 
 
 
