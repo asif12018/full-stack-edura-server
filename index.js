@@ -4,6 +4,7 @@ const app = express();
 const port = process.env.port || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 
 // const stripe = require('stripe')('sk_test_51PMVF107SE24j7VzraeMv0hxElC5mPcEZZR4kZTyqhrZmqIlqsiuXBLnw7Y6dQuUzBudHJl2LGhvDb7XQaaqkNpJ002UESASl0')
 
@@ -39,6 +40,50 @@ async function run() {
     const enrollCollection = client.db('eduraDB').collection('enroll');
     const assignmentCollection = client.db('eduraDB').collection('assignment');
     const classCollection = client.db('eduraDB').collection('class');
+
+
+    //custom created middleware
+    const verifyToken = (req,res,next) =>{
+      // console.log(req.headers.authorization)
+      if(!req.headers.authorization){
+          return res.status(401).send({message: 'forbidden access'});
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      if(!token){
+        return res.status(401).send({message: 'forbidden access'});
+      }
+    
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(error, decoded)=>{
+          
+           if(error){
+            return res.status(401).send({message:'unauthorized invalid token'})
+           }
+           req.decoded = decoded;
+           next();
+      })
+      
+    }
+    
+
+
+    
+
+
+    //jwt token related api
+    app.post('/jwt', async(req,res)=>{
+      const secret = process.env.ACCESS_TOKEN_SECRET;
+      const user = req.body;
+      const token = jwt.sign(user, secret, {expiresIn:'1h'})
+      res.send(token);
+    })
+
+
+
+
+
+
+
+
     //sending the user data to the server
     app.post('/user', async(req,res)=>{
         const user = req.body;
@@ -58,14 +103,14 @@ async function run() {
     })
 
     //sending teacher request data to the database
-    app.post('/apply', async(req,res)=>{
+    app.post('/apply', verifyToken,async(req,res)=>{
         const teacher = req.body;
         const result = await teacherCollection.insertOne(teacher);
         res.send(result);
     })
 
     //get user info
-    app.get('/teacher/:email', async(req,res)=>{
+    app.get('/teacher/:email', verifyToken,async(req,res)=>{
         const email = req.params.email
         // console.log(email)
         const query = {email:email}
@@ -76,7 +121,7 @@ async function run() {
     })
 
      //get specific teacher info
-     app.get('/user/:email', async(req,res)=>{
+     app.get('/user/:email', verifyToken,async(req,res)=>{
         const email = req.params.email
         // console.log(email)
         const query = {email:email}
@@ -86,13 +131,13 @@ async function run() {
     })
 
     //get all teacher info
-    app.get('/allteachers', async(req,res)=>{
+    app.get('/allteachers', verifyToken,async(req,res)=>{
       const result = await teacherCollection.find().toArray();
       res.send(result);
     })
 
     //update the course request
-    app.patch('/teacher/:id', async(req,res)=>{
+    app.patch('/teacher/:id', verifyToken,async(req,res)=>{
        const id = req.params.id;
        const filter = {_id: new ObjectId(id)}
        const updateDoc = {
@@ -106,7 +151,7 @@ async function run() {
     })
 
     //making the user to teacher
-    app.patch('/user/:email', async(req,res)=>{
+    app.patch('/user/:email', verifyToken,async(req,res)=>{
       const email = req.params.email;
       const filter = {email:email}
       const updateDoc = {
@@ -119,7 +164,7 @@ async function run() {
     })
 
     //rejecting the course request
-    app.patch('/teacher/reject/:id', async(req,res)=>{
+    app.patch('/teacher/reject/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -132,7 +177,7 @@ async function run() {
     })
 
     //request the another review of the course
-    app.patch('/teacher/review/:email', async(req,res)=>{
+    app.patch('/teacher/review/:email', verifyToken,async(req,res)=>{
       const email = req.params.email;
       const filter = {email:email};
       const updateDoc = {
@@ -166,7 +211,7 @@ async function run() {
   
 
     //make a user admin
-    app.patch('/promote/:id', async(req,res)=>{
+    app.patch('/promote/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       // console.log(id)
       const filter = {_id: new ObjectId(id)};
@@ -186,7 +231,7 @@ async function run() {
     })
 
     //api to add course to the database
-    app.post('/addCourse', async(req,res)=>{
+    app.post('/addCourse', verifyToken,async(req,res)=>{
        const course = req.body;
        const result = await courseCollection.insertOne(course);
        res.send(result);
@@ -200,7 +245,7 @@ async function run() {
     
 
     //api to get specific user all courses
-    app.get('/teachersAllCourse/:email', async(req,res)=>{
+    app.get('/teachersAllCourse/:email', verifyToken,async(req,res)=>{
       const email = req.params.email;
       // console.log(email)
       const query = {email:email}
@@ -209,7 +254,7 @@ async function run() {
     })
 
     //approve a teacher course
-    app.patch('/approveCourse/:id', async(req,res)=>{
+    app.patch('/approveCourse/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -222,7 +267,7 @@ async function run() {
     })
 
     //reject a teacher course
-    app.patch('/rejectCourse/:id', async(req,res)=>{
+    app.patch('/rejectCourse/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -236,7 +281,7 @@ async function run() {
     })
 
     //api to get teachers specific course
-    app.get('/progress/:id', async(req,res)=>{
+    app.get('/progress/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await courseCollection.findOne(query);
@@ -244,7 +289,7 @@ async function run() {
     })
 
     //request a review for the course request
-    app.patch('/reviewRequest/:id', async(req,res)=>{
+    app.patch('/reviewRequest/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -274,7 +319,7 @@ async function run() {
     })
 
     //api to update course
-    app.patch('/update/:id', async(req,res)=>{
+    app.patch('/update/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const data = req.body;
       const filter = {_id: new ObjectId(id)};
@@ -293,7 +338,7 @@ async function run() {
     })
 
     //api to delete a specific
-    app.delete('/deleteCourse/:id', async (req, res) => {
+    app.delete('/deleteCourse/:id', verifyToken,async (req, res) => {
       const id = req.params.id;
       // console.log(id);
       const query = { _id: new ObjectId(id) }; // Ensure ObjectId is imported from 'mongodb'
@@ -306,7 +351,7 @@ async function run() {
       }
     });
     //api to save enroll details
-    app.post('/saveEnroll/', async(req,res)=>{
+    app.post('/saveEnroll/', verifyToken,async(req,res)=>{
        const data = req.body;
        const result = await enrollCollection.insertOne(data);
        res.send(result);
@@ -335,14 +380,14 @@ async function run() {
     })
 
     //api to create assignment
-    app.post('/addAssignment', async(req,res)=>{
+    app.post('/addAssignment', verifyToken,async(req,res)=>{
       const data = req.body;
       const result = await assignmentCollection.insertOne(data);
       res.send(result);
     })
 
     //api to get All the assignment
-    app.get('/getAssignment/:id', async(req,res)=>{
+    app.get('/getAssignment/:id', verifyToken,async(req,res)=>{
       const id = req.params.id;
       const query = {courseId: id}
       // console.log(id);
@@ -351,7 +396,7 @@ async function run() {
     })
     
     //api to save class
-    app.post('/addClass', async(req,res)=>{
+    app.post('/addClass', verifyToken,async(req,res)=>{
       const data = req.body;
       const result = await classCollection.insertOne(data);
       res.send(result);
@@ -375,7 +420,7 @@ async function run() {
     };
 
 
-    app.post('/create-payment-intent', async(req,res)=>{
+    app.post('/create-payment-intent', verifyToken,async(req,res)=>{
        const {price} = req.body;
        const amount = parseInt(price * 100);
        const paymentIntent = await stripe.paymentIntents.create({
