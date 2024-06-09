@@ -5,6 +5,8 @@ const port = process.env.port || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 
+// const stripe = require('stripe')('sk_test_51PMVF107SE24j7VzraeMv0hxElC5mPcEZZR4kZTyqhrZmqIlqsiuXBLnw7Y6dQuUzBudHJl2LGhvDb7XQaaqkNpJ002UESASl0')
+
 //express dot env
 require('dotenv').config();
 app.use(cors())
@@ -14,7 +16,8 @@ app.use(express.json());
 
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.ecpul2e.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
+// console.log(process.env.STRIPE_SECRET_KEY)
+const stripe = require('stripe')(`${process.env.STRIPE_SECRET_KEY}`)
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -33,6 +36,7 @@ async function run() {
     const userCollection = client.db('eduraDB').collection('user');
     const teacherCollection = client.db('eduraDB').collection('teacher');
     const courseCollection = client.db('eduraDB').collection('course');
+    const enrollCollection = client.db('eduraDB').collection('enroll');
     //sending the user data to the server
     app.post('/user', async(req,res)=>{
         const user = req.body;
@@ -299,6 +303,61 @@ async function run() {
         res.status(500).send({ error: 'An error occurred while deleting the course' });
       }
     });
+    //api to save enroll details
+    app.post('/saveEnroll/', async(req,res)=>{
+       const data = req.body;
+       const result = await enrollCollection.insertOne(data);
+       res.send(result);
+    })
+
+    //api to update enroll number
+    app.patch('/updateInfo/:id', async(req,res)=>{
+      const id = req.params.id;
+      const data = req.body;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set:{
+          totalEnroll:data.enroll
+        }
+      }
+      const result = await courseCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+    //api get specific user enroll course
+    app.get('/myEnroll/:email', async(req,res)=>{
+      const email = req.params.email;
+      const query = {email:email}
+      const result = await enrollCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //stripe api payment intent
+    const calculateOrderAmount = (items) => {
+      // Replace this constant with a calculation of the order's amount
+      // Calculate the order total on the server to prevent
+      // people from directly manipulating the amount on the client
+      return items;
+    };
+
+
+    app.post('/create-payment-intent', async(req,res)=>{
+       const {price} = req.body;
+       const amount = parseInt(price * 100);
+       const paymentIntent = await stripe.paymentIntents.create({
+        amount: calculateOrderAmount(amount),
+        currency: "usd",
+        // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+        payment_method_types: ['card'],
+        
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+
+
+    })
     
 
 
