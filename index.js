@@ -37,6 +37,8 @@ async function run() {
     const teacherCollection = client.db('eduraDB').collection('teacher');
     const courseCollection = client.db('eduraDB').collection('course');
     const enrollCollection = client.db('eduraDB').collection('enroll');
+    const assignmentCollection = client.db('eduraDB').collection('assignment');
+    const classCollection = client.db('eduraDB').collection('class');
     //sending the user data to the server
     app.post('/user', async(req,res)=>{
         const user = req.body;
@@ -327,8 +329,40 @@ async function run() {
     //api get specific user enroll course
     app.get('/myEnroll/:email', async(req,res)=>{
       const email = req.params.email;
-      const query = {email:email}
+      const query = {enrollEmail:email}
       const result = await enrollCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //api to create assignment
+    app.post('/addAssignment', async(req,res)=>{
+      const data = req.body;
+      const result = await assignmentCollection.insertOne(data);
+      res.send(result);
+    })
+
+    //api to get All the assignment
+    app.get('/getAssignment/:id', async(req,res)=>{
+      const id = req.params.id;
+      const query = {courseId: id}
+      // console.log(id);
+      const result = await assignmentCollection.find(query).toArray();
+      res.send(result);
+    })
+    
+    //api to save class
+    app.post('/addClass', async(req,res)=>{
+      const data = req.body;
+      const result = await classCollection.insertOne(data);
+      res.send(result);
+    })
+
+    //api to get all the class
+    app.get('/getClass/:id', async(req,res)=>{
+      const id = req.params.id;
+    
+      const query = {courseId:id}
+      const result = await classCollection.find(query).toArray();
       res.send(result);
     })
 
@@ -358,6 +392,8 @@ async function run() {
 
 
     })
+
+
     
 
 
