@@ -411,6 +411,24 @@ async function run() {
       res.send(result);
     })
 
+    //api to load course all class
+    app.get(`/getAllClass/:id`, verifyToken,async(req,res)=>{
+          const id = req.params.id;
+          const query = {courseId:id}
+          const result = await classCollection.find(query).toArray();
+          res.send(result);
+    })
+
+    //api to get single class video
+    app.get('/getSingleClass/:id', async(req,res)=>{
+      const id = req.params.id;
+      // console.log(id);
+      const query = {_id: new ObjectId(id)};
+      const result = await classCollection.findOne(query);
+      // console.log(result)
+      res.send(result)
+    })
+
     //stripe api payment intent
     const calculateOrderAmount = (items) => {
       // Replace this constant with a calculation of the order's amount
