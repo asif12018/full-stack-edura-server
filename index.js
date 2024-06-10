@@ -445,7 +445,9 @@ async function run() {
     app.get('/getSubmittedAssignment/:id', async(req,res)=>{
       const id = req.params.id;
       const query = {courseId: id};
+      // console.log(query);
       const result = await submitAssignmetCollection.find(query).toArray();
+      // console.log(result.length)
       res.send(result);
     })
 
@@ -475,6 +477,14 @@ async function run() {
       })
 
 
+    })
+
+    //get specific type assignment
+    app.get('/filterAssignment/:type', async(req,res)=>{
+      const type = req.params.type;
+      const query = {assignmentTitle:type}
+      const result = await submitAssignmetCollection.find(query).toArray();
+      res.send(result);
     })
 
 
