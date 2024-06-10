@@ -40,6 +40,7 @@ async function run() {
     const enrollCollection = client.db('eduraDB').collection('enroll');
     const assignmentCollection = client.db('eduraDB').collection('assignment');
     const classCollection = client.db('eduraDB').collection('class');
+    const submitAssignmetCollection = client.db('eduraDB').collection('submitAssignment');
 
 
     //custom created middleware
@@ -428,6 +429,26 @@ async function run() {
       // console.log(result)
       res.send(result)
     })
+
+    //api to submit assignment
+    app.post('/submitAssignment', async(req,res)=>{
+       const data = req.body;
+       const result = await submitAssignmetCollection.insertOne(data);
+       res.send(result);
+    })
+
+
+
+    //get all submitted assignment
+
+
+    app.get('/getSubmittedAssignment/:id', async(req,res)=>{
+      const id = req.params.id;
+      const query = {courseId: id};
+      const result = await submitAssignmetCollection.find(query).toArray();
+      res.send(result);
+    })
+
 
     //stripe api payment intent
     const calculateOrderAmount = (items) => {
