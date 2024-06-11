@@ -451,6 +451,14 @@ async function run() {
       res.send(result);
     })
 
+    //get user all submitted assignment
+    app.get('/getUserAssignment/:email', verifyToken,async(req,res)=>{
+       const email = req.params.email;
+       const query = {submitterEmail: email};
+       const result = await submitAssignmetCollection.find(query).toArray();
+       res.send(result);
+    })
+
 
     //stripe api payment intent
     const calculateOrderAmount = (items) => {
