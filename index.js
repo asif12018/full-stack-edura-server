@@ -459,6 +459,30 @@ async function run() {
        res.send(result);
     })
 
+    //get all the paid order
+    app.get('/getOrderCourse/:email', verifyToken,async(req,res)=>{
+      const email = req.params.email;
+      const query = {instructorEmail: email};
+      const result = await enrollCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    //get all the course
+    app.get('/getAllTheSiteCourse', async(req,res)=>{
+      
+      const result = await courseCollection.find().toArray();
+      // console.log(result)
+      res.send(result);
+
+    })
+
+
+    //get all the purchase data
+    app.get('/getAllThePurchase', verifyToken,async(req,res)=>{
+      const result = await enrollCollection.find().toArray();
+      res.send(result);
+    })
+
 
     //stripe api payment intent
     const calculateOrderAmount = (items) => {
@@ -467,6 +491,8 @@ async function run() {
       // people from directly manipulating the amount on the client
       return items;
     };
+
+
 
 
     app.post('/create-payment-intent', verifyToken,async(req,res)=>{
@@ -486,6 +512,8 @@ async function run() {
 
 
     })
+
+    
 
     //get specific type assignment
     app.get('/filterAssignment/:type', async(req,res)=>{
