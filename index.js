@@ -10,7 +10,9 @@ const jwt = require('jsonwebtoken');
 
 //express dot env
 require('dotenv').config();
-app.use(cors())
+app.use(cors({
+  origin:["https://edura-4b499.web.app","http://localhost:5173"]
+}))
 //middleware to read the data from frontend
 app.use(express.json());
 
@@ -31,7 +33,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     //the data collection
     const userCollection = client.db('eduraDB').collection('user');
@@ -64,6 +66,18 @@ async function run() {
            next();
       })
       
+    }
+
+    //middleware to verify admin
+    const verifyAdmin = async(req,res,next)=>{
+       const email = req.decoded.email;
+       const query = {email:email};
+       const user = await userCollection.findOne(query);
+       const isAdmin = user?.role == 'admin';
+       if(!isAdmin){
+        return res.status(403).send({message:'forbidden. your not admin'})
+       }
+       next();
     }
     
 
@@ -139,7 +153,7 @@ async function run() {
     })
 
     //update the course request
-    app.patch('/teacher/:id', verifyToken,async(req,res)=>{
+    app.patch('/teacher/:id', verifyToken, verifyAdmin,async(req,res)=>{
        const id = req.params.id;
        const filter = {_id: new ObjectId(id)}
        const updateDoc = {
@@ -153,7 +167,7 @@ async function run() {
     })
 
     //making the user to teacher
-    app.patch('/user/:email', verifyToken,async(req,res)=>{
+    app.patch('/user/:email', verifyToken, verifyAdmin,async(req,res)=>{
       const email = req.params.email;
       const filter = {email:email}
       const updateDoc = {
@@ -166,7 +180,7 @@ async function run() {
     })
 
     //rejecting the course request
-    app.patch('/teacher/reject/:id', verifyToken,async(req,res)=>{
+    app.patch('/teacher/reject/:id', verifyToken, verifyAdmin,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -213,7 +227,7 @@ async function run() {
   
 
     //make a user admin
-    app.patch('/promote/:id', verifyToken,async(req,res)=>{
+    app.patch('/promote/:id', verifyToken, verifyAdmin,async(req,res)=>{
       const id = req.params.id;
       // console.log(id)
       const filter = {_id: new ObjectId(id)};
@@ -256,7 +270,7 @@ async function run() {
     })
 
     //approve a teacher course
-    app.patch('/approveCourse/:id', verifyToken,async(req,res)=>{
+    app.patch('/approveCourse/:id', verifyToken, verifyAdmin,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -269,7 +283,7 @@ async function run() {
     })
 
     //reject a teacher course
-    app.patch('/rejectCourse/:id', verifyToken,async(req,res)=>{
+    app.patch('/rejectCourse/:id', verifyToken, verifyAdmin,async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updateDoc = {
@@ -552,8 +566,8 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
