@@ -500,6 +500,12 @@ async function run() {
       res.send(result);
     })
 
+    //get the all the feedback
+    app.get('/allFeedback', async(req,res)=>{
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    })
+
 
     //stripe api payment intent
     const calculateOrderAmount = (items) => {
