@@ -41,6 +41,7 @@ async function run() {
     const assignmentCollection = client.db('eduraDB').collection('assignment');
     const classCollection = client.db('eduraDB').collection('class');
     const submitAssignmetCollection = client.db('eduraDB').collection('submitAssignment');
+    const reviewCollection = client.db('eduraDB').collection('review')
 
 
     //custom created middleware
@@ -480,6 +481,22 @@ async function run() {
     //get all the purchase data
     app.get('/getAllThePurchase', verifyToken,async(req,res)=>{
       const result = await enrollCollection.find().toArray();
+      res.send(result);
+    })
+
+    //add review to the database
+    app.post('/addReview',verifyToken,async(req,res)=>{
+      const data = req.body;
+      const result = await reviewCollection.insertOne(data);
+      res.send(result);
+    })
+
+    //get specific course feedBack
+    app.get(`/review/:id`, verifyToken,async(req,res)=>{
+      const id = req.params.id;
+      // console.log(id);
+      const query = {courseId: id}
+      const result = await reviewCollection.find(query).toArray();
       res.send(result);
     })
 
